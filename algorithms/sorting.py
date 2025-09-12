@@ -44,3 +44,43 @@ def quick_sort(arr):
     mid  = [x for x in arr if x == pivot]
     right= [x for x in arr if x > pivot]
     return quick_sort(left) + mid + quick_sort(right)
+
+def selection_sort(arr):
+    a = arr.copy()
+    n = len(a)
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            if a[j] < a[min_idx]:
+                min_idx = j
+        a[i], a[min_idx] = a[min_idx], a[i]
+    return a
+
+def heap_sort(arr):
+    a = arr.copy()
+    n = len(a)
+
+    def heapify(a, n, i):
+        largest = i
+        left = 2 * i + 1
+        right = 2 * i + 2
+        
+        if left < n and a[left] > a[largest]:
+            largest = left
+        if right < n and a[right] > a[largest]:
+            largest = right
+        
+        if largest != i:
+            a[i], a[largest] = a[largest], a[i]
+            heapify(a, n, largest)
+
+    # Build max heap
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(a, n, i)
+
+    # Extract elements one by one
+    for i in range(n - 1, 0, -1):
+        a[0], a[i] = a[i], a[0]
+        heapify(a, i, 0)
+
+    return a
