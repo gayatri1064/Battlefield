@@ -43,7 +43,7 @@ def choose_algorithm(category, user_number, algorithms, taken_algo=None):
 
         selected_algo = available_algos[choice - 1]
 
-        
+        # Prevent same choice as the other user
         if taken_algo and selected_algo["name"] == taken_algo["name"]:
             print(f"User {user_number}, {taken_algo['name']} is already taken by the other player. Choose another.")
             continue
@@ -55,7 +55,22 @@ def generate_random_array(size=20, min_val=1, max_val=100):
     import random
     return random.sample(range(min_val, max_val), size)
 
+
+def get_input_array():
+    """Ask user for input numbers or return a random array if left blank."""
+    arr_input = input("\nEnter numbers (comma separated) or press Enter for random: ")
+    if arr_input.strip():
+        try:
+            return list(map(int, arr_input.split(",")))
+        except ValueError:
+            print("Invalid input. Generating random array instead.")
+            return generate_random_array()
+    else:
+        return generate_random_array()
+
+
 def format_result(name, time_taken, memory, correct, score, result):
+    """Format the output result string for displaying algorithm performance."""
     return (
         f"{name} → Result: {result} | "
         f"Time: {time_taken:.6f}s | Memory: {memory:.2f}KB | "
