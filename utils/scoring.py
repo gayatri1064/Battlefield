@@ -1,4 +1,3 @@
-
 def score_algorithm(correct, time_taken, memory_used, fastest_time, lowest_memory,
                     Wc=0.5, Wt=0.3, Wm=0.2):
     C = 1 if correct else 0

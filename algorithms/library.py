@@ -1,23 +1,49 @@
+
+
 from algorithms.sorting import bubble_sort, insertion_sort, merge_sort, quick_sort, selection_sort, heap_sort
 from algorithms.searching import linear_search, binary_search, fibonacci_search
-from algorithms.graph import dijkstra, bfs,dfs, prim, kruskal
-from algorithms.dp import fibonacci_recursive, fibonacci_dp
+from algorithms.shortest_path import dijkstra, bellman_ford, floyd_warshall
+from algorithms.mcst import prim, kruskal
 
+from algorithms.graph import bfs, dfs
+from algorithms.string_matching import naive_search, kmp_search, rabin_karp, boyer_moore
+from algorithms.subset import subset_backtracking, subset_bitmasking 
 algorithms = {
-    "bubble_sort": {"name": "Bubble Sort", "category": "sorting", "func": bubble_sort},
-    "insertion_sort": {"name": "Insertion Sort", "category": "sorting", "func": insertion_sort},
-    "merge_sort": {"name": "Merge Sort", "category": "sorting", "func": merge_sort},
-    "quick_sort": {"name": "Quick Sort", "category": "sorting", "func": quick_sort},
-    "selection_sort": {"name": "Selection Sort", "category": "sorting", "func": selection_sort},
-    "heap_sort": {"name": "Heap Sort", "category": "sorting", "func": heap_sort},
-    "linear_search": {"name": "Linear Search", "category": "searching", "func": linear_search},
-    "binary_search": {"name": "Binary Search", "category": "searching", "func": binary_search},
-    "fibonacci_search": {"name": "Fibonacci Search", "category": "searching", "func": fibonacci_search},
-    "dijkstra": {"name": "Dijkstra's Algorithm", "category": "graph", "func": dijkstra},
-    "bfs": {"name": "BFS", "category": "graph", "func": bfs},
-    "dfs": {"name": "Depth-First Search (DFS)", "category": "graph", "func": dfs},
-    "prim": {"name": "Prim's Algorithm", "category": "graph", "func": prim},
-    "kruskal": {"name": "Kruskal's Algorithm", "category": "graph", "func": kruskal},
-    "fibonacci_recursive": {"name": "Fibonacci Recursive", "category": "dp", "func": fibonacci_recursive},
-    "fibonacci_dp": {"name": "Fibonacci DP", "category": "dp", "func": fibonacci_dp},
+    "string matching": [
+        {"name": "Naive Search", "func": naive_search, "category": "String Matching"},
+        {"name": "KMP Search", "func": kmp_search, "category": "String Matching"},
+        {"name": "Rabin-Karp", "func": rabin_karp, "category": "String Matching"},
+        {"name": "Boyer-Moore", "func": boyer_moore, "category": "String Matching"},
+    ],
+    "sorting": [
+        {"key": "bubble_sort", "name": "Bubble Sort", "func": bubble_sort},
+        {"key": "insertion_sort", "name": "Insertion Sort", "func": insertion_sort},
+        {"key": "merge_sort", "name": "Merge Sort", "func": merge_sort},
+        {"key": "quick_sort", "name": "Quick Sort", "func": quick_sort},
+        {"key": "selection_sort", "name": "Selection Sort", "func": selection_sort},
+        {"key": "heap_sort", "name": "Heap Sort", "func": heap_sort},
+    ],
+    "searching": [
+        {"key": "linear_search", "name": "Linear Search", "func": linear_search},
+        {"key": "binary_search", "name": "Binary Search", "func": binary_search},
+        {"key": "fibonacci_search", "name": "Fibonacci Search", "func": fibonacci_search},
+    ],
+    "shortest path": [
+        {"key": "dijkstra", "name": "Dijkstra's Algorithm", "func": dijkstra},
+        {"key": "bellman_ford", "name": "Bellman-Ford Algorithm", "func": bellman_ford},
+        {"key": "floyd_warshall", "name": "Floyd-Warshall Algorithm", "func": floyd_warshall},
+    ],
+    "mst": [
+        {"key": "prim", "name": "Prim's Algorithm", "func": prim},
+        {"key": "kruskal", "name": "Kruskal's Algorithm", "func": kruskal},
+    ],
+    "graph": [
+        {"key": "bfs", "name": "Breadth-First Search (BFS)", "func": bfs},
+        {"key": "dfs", "name": "Depth-First Search (DFS)", "func": dfs},
+    ],
+ 
+     "subset generation": [  
+        {"name": "Backtracking", "func": subset_backtracking},
+        {"name": "Bitmasking", "func": subset_bitmasking},
+    ],
 }

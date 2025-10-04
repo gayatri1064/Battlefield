@@ -1,7 +1,7 @@
 # room_interface.py
 from room_manager import RoomManager, RoomStatus
 from algorithms.library import algorithms
-from utils.helpers import choose_algorithm, generate_random_array
+from utils.helpers import choose_algorithm, generate_input
 from utils.room_battle_runner import execute_room_battle
 import random
 
