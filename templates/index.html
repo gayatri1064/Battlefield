@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Battle Arena ⚔️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981',
+                        accent: '#06b6d4',
+                        dark: '#0f172a',
+                        'dark-lighter': '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8); }
+        }
+        .glow-animation {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-up {
+            animation: slide-up 0.5s ease-out;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-dark via-slate-900 to-dark-lighter text-white min-h-screen">
+
+    <nav id="navbar" class="hidden fixed top-0 left-0 right-0 bg-dark-lighter/95 backdrop-blur-sm border-b border-slate-700 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                  
+                <div class="flex items-center">
+                    <button onclick="showScreen('landing-screen')" class="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent hover:from-blue-300 hover:to-cyan-300 transition-all">
+                        Algorithm Battle Arena ⚔️
+                    </button>
+                </div>
+                
+                 
+                <div class="hidden md:flex items-center space-x-4">
+                    <button onclick="showScreen('landing-screen')" class="px-4 py-2 rounded-lg hover:bg-slate-700 transition-all text-sm font-medium">
+                        Home
+                    </button>
+                    <button onclick="createRoom()" class="px-4 py-2 rounded-lg hover:bg-slate-700 transition-all text-sm font-medium">
+                        Create Room
+                    </button>
+                    <button onclick="joinRoom()" class="px-4 py-2 rounded-lg hover:bg-slate-700 transition-all text-sm font-medium">
+                        Join Room
+                    </button>
+                </div>
+
+                
+            </div>
+        </div>
+
+    </nav>
+
+    <div id="landing-screen" class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+        <div class="text-center slide-up">
+            <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400 bg-clip-text text-transparent px-4">
+                Algorithm Battle Arena ⚔️
+            </h1>
+            <p class="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 sm:mb-12 px-4">
+                Pick your algorithm, run the input, and see who wins!
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
+                <button onclick="createRoom()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 glow-animation">
+                    Create Room
+                </button>
+                <button onclick="joinRoom()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105">
+                    Join Room
+                </button>
+                <button onclick="alert('Algorithm learning resources coming soon!')" class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105">
+                    Learn Algorithms
+                </button>
+            </div>
+        </div>
+    </div>
+
+ 
+    <div id="room-setup" class="hidden min-h-screen p-4 sm:p-6 pt-20">
+        <div class="max-w-7xl mx-auto">
+            
+            <div class="text-center mb-6 sm:mb-8">
+                <h2 class="text-xl sm:text-2xl font-bold mb-2">Room Code</h2>
+                <div class="inline-block bg-dark-lighter px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-2 border-cyan-500">
+                    <span class="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-cyan-400" id="room-code">ABC123</span>
+                </div>
+            </div>
+
+            <div class="flex flex-row gap-2 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                
+                <div id="player1-panel" class="flex-1 bg-dark-lighter rounded-xl p-2 sm:p-4 lg:p-6 border-2 border-blue-500 shadow-xl transition-all">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 class="text-sm sm:text-xl lg:text-2xl font-bold text-blue-400">Player 1</h3>
+                        <span id="p1-status-badge" class="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-blue-600">Your Turn</span>
+                    </div>
+                    
+                     Category Selection 
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Algorithm Category</label>
+                        <select id="p1-category" onchange="updateAlgorithms(1, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-blue-500">
+                            <option value="">Select Category</option>
+                            <option value="sorting">Sorting</option>
+                            <option value="searching">Searching</option>
+                            <option value="graph">Graph</option>
+                            <option value="dynamic">Dynamic Programming</option>
+                        </select>
+                    </div>
+
+                     Algorithm Selection 
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Algorithm</label>
+                        <select id="p1-algorithm" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-blue-500">
+                            <option value="">Select Algorithm</option>
+                        </select>
+                    </div>
+
+                     Algorithm Info 
+                    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4 min-h-[60px] sm:min-h-[80px]" id="p1-algo-info">
+                        <p class="text-gray-400 text-xs">Select an algorithm to see details</p>
+                    </div>
+
+                     Input Configuration 
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Array Size</label>
+                        <input type="range" min="5" max="100" value="20" id="p1-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="text-center mt-1">
+                            <span class="text-sm sm:text-lg lg:text-xl font-bold text-blue-400" id="p1-array-size-display">20</span> <span class="text-xs sm:text-sm">elements</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Custom Array</label>
+                        <input type="text" id="p1-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <button onclick="generateRandomArray(1)" id="p1-generate-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+                        Generate Random
+                    </button>
+
+                    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+                        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Array:</p>
+                        <p class="text-xs font-mono text-cyan-400 break-all" id="p1-current-array">[Click Generate]</p>
+                    </div>
+
+                    <button onclick="confirmPlayerSelection(1)" id="p1-confirm-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1 sm:py-2 lg:py-3 rounded-lg transition-all text-xs sm:text-sm lg:text-base" disabled>
+                        Confirm
+                    </button>
+                </div>
+
+                 
+                <div id="player2-panel" class="flex-1 bg-dark-lighter rounded-xl p-2 sm:p-4 lg:p-6 border-2 border-green-500 shadow-xl transition-all opacity-50 pointer-events-none">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 class="text-sm sm:text-xl lg:text-2xl font-bold text-green-400">Player 2</h3>
+                        <span id="p2-status-badge" class="px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-slate-600">Waiting...</span>
+                    </div>
+                    
+                     Category Selection 
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Algorithm Category</label>
+                        <select id="p2-category" onchange="updateAlgorithms(2, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-green-500">
+                            <option value="">Select Category</option>
+                            <option value="sorting">Sorting</option>
+                            <option value="searching">Searching</option>
+                            <option value="graph">Graph</option>
+                            <option value="dynamic">Dynamic Programming</option>
+                        </select>
+                    </div>
+
+                     Algorithm Selection 
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Algorithm</label>
+                        <select id="p2-algorithm" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-green-500">
+                            <option value="">Select Algorithm</option>
+                        </select>
+                    </div>
+
+                     Algorithm Info 
+                    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4 min-h-[60px] sm:min-h-[80px]" id="p2-algo-info">
+                        <p class="text-gray-400 text-xs">Select an algorithm to see details</p>
+                    </div>
+
+                     Input Configuration 
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Array Size</label>
+                        <input type="range" min="5" max="100" value="20" id="p2-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="text-center mt-1">
+                            <span class="text-sm sm:text-lg lg:text-xl font-bold text-green-400" id="p2-array-size-display">20</span> <span class="text-xs sm:text-sm">elements</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 sm:mb-4">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Custom Array</label>
+                        <input type="text" id="p2-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-green-500">
+                    </div>
+
+                    <button onclick="generateRandomArray(2)" id="p2-generate-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+                        Generate Random
+                    </button>
+
+                    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+                        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Array:</p>
+                        <p class="text-xs font-mono text-cyan-400 break-all" id="p2-current-array">[Click Generate]</p>
+                    </div>
+
+                    <button onclick="confirmPlayerSelection(2)" id="p2-confirm-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1 sm:py-2 lg:py-3 rounded-lg transition-all text-xs sm:text-sm lg:text-base" disabled>
+                        Start Battle!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ 
+    <div id="player1-selection" class="hidden min-h-screen p-4 sm:p-6 pt-20">
+        <div class="max-w-4xl mx-auto">
+             Room Code Display 
+            <div class="text-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold mb-2">Room Code</h2>
+                <div class="inline-block bg-dark-lighter px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-2 border-blue-500">
+                    <span class="text-xl sm:text-2xl font-mono font-bold text-blue-400" id="room-code-p1">ABC123</span>
+                </div>
+            </div>
+
+            <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 md:p-8 shadow-xl border-2 border-blue-500">
+                <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-blue-400">Player 1 - Make Your Selection</h2>
+                
+                 Category Selection 
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm Category</label>
+                    <select id="p1-category" onchange="updateAlgorithms(1, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-blue-500">
+                        <option value="">Select Category</option>
+                        <option value="sorting">Sorting</option>
+                        <option value="searching">Searching</option>
+                        <option value="graph">Graph</option>
+                        <option value="dynamic">Dynamic Programming</option>
+                    </select>
+                </div>
+
+                 Algorithm Selection 
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm</label>
+                    <select id="p1-algorithm" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-blue-500">
+                        <option value="">Select Algorithm</option>
+                    </select>
+                </div>
+
+                 Algorithm Info 
+                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6" id="p1-algo-info">
+                    <p class="text-gray-400 text-xs sm:text-sm">Select an algorithm to see details</p>
+                </div>
+
+                 Input Configuration 
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Array Size</label>
+                    <input type="range" min="5" max="100" value="20" id="p1-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                    <div class="text-center mt-2">
+                        <span class="text-xl sm:text-2xl font-bold text-blue-400" id="p1-array-size-display">20</span> elements
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Custom Array (comma-separated)</label>
+                    <input type="text" id="p1-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-blue-500">
+                </div>
+
+                <button onclick="generateRandomArray(1)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-all mb-4 text-sm sm:text-base">
+                    Generate Random Array
+                </button>
+
+                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6">
+                    <p class="text-xs sm:text-sm font-semibold mb-2">Current Array:</p>
+                    <p class="text-sm sm:text-base font-mono text-cyan-400 break-all" id="p1-current-array">[Click Generate Random Array]</p>
+                </div>
+
+                <button onclick="submitPlayer1Selection()" id="p1-submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base" disabled>
+                    Confirm Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="waiting-screen" class="hidden min-h-screen p-4 sm:p-6 pt-20 flex items-center justify-center">
+        <div class="text-center">
+            <div class="inline-block w-16 h-16 sm:w-20 sm:h-20 border-4 border-blue-500 border-t-transparent rounded-full spinner mb-6"></div>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Waiting for Player 2...</h2>
+            <p class="text-base sm:text-lg text-gray-300 mb-6">Share the room code with your opponent</p>
+            <div class="inline-block bg-dark-lighter px-6 sm:px-8 py-3 sm:py-4 rounded-lg border-2 border-blue-500">
+                <span class="text-2xl sm:text-3xl font-mono font-bold text-blue-400" id="room-code-waiting">ABC123</span>
+            </div>
+        </div>
+    </div>
+ 
+    <div id="player2-selection" class="hidden min-h-screen p-4 sm:p-6 pt-20">
+        <div class="max-w-4xl mx-auto">
+             Room Code Display 
+            <div class="text-center mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold mb-2">Room Code</h2>
+                <div class="inline-block bg-dark-lighter px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-2 border-green-500">
+                    <span class="text-xl sm:text-2xl font-mono font-bold text-green-400" id="room-code-p2">ABC123</span>
+                </div>
+            </div>
+
+            <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 md:p-8 shadow-xl border-2 border-green-500">
+                <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-green-400">Player 2 - Make Your Selection</h2>
+                
+                 Category Selection 
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm Category</label>
+                    <select id="p2-category" onchange="updateAlgorithms(2, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-green-500">
+                        <option value="">Select Category</option>
+                        <option value="sorting">Sorting</option>
+                        <option value="searching">Searching</option>
+                        <option value="graph">Graph</option>
+                        <option value="dynamic">Dynamic Programming</option>
+                    </select>
+                </div>
+
+                 Algorithm Selection 
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm</label>
+                    <select id="p2-algorithm" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-green-500">
+                        <option value="">Select Algorithm</option>
+                    </select>
+                </div>
+
+                 Algorithm Info 
+                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6" id="p2-algo-info">
+                    <p class="text-gray-400 text-xs sm:text-sm">Select an algorithm to see details</p>
+                </div>
+
+                 Input Configuration 
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Array Size</label>
+                    <input type="range" min="5" max="100" value="20" id="p2-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                    <div class="text-center mt-2">
+                        <span class="text-xl sm:text-2xl font-bold text-green-400" id="p2-array-size-display">20</span> elements
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-base sm:text-lg font-semibold mb-3">Custom Array (comma-separated)</label>
+                    <input type="text" id="p2-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-green-500">
+                </div>
+
+                <button onclick="generateRandomArray(2)" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-all mb-4 text-sm sm:text-base">
+                    Generate Random Array
+                </button>
+
+                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6">
+                    <p class="text-xs sm:text-sm font-semibold mb-2">Current Array:</p>
+                    <p class="text-sm sm:text-base font-mono text-cyan-400 break-all" id="p2-current-array">[Click Generate Random Array]</p>
+                </div>
+
+                <button onclick="submitPlayer2Selection()" id="p2-submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base" disabled>
+                    Start Battle! ⚔️
+                </button>
+            </div>
+        </div>
+    </div>
+
+   
+    <div id="battle-progress" class="hidden min-h-screen p-4 sm:p-6 pt-20">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8">Battle in Progress! ⚔️</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                 Player 1 Progress 
+                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-blue-500 shadow-xl">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-blue-400">Player 1</h3>
+                    <p class="text-base sm:text-lg mb-2" id="battle-p1-algo-name">Quick Sort</p>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs sm:text-sm mb-1">
+                            <span>Progress</span>
+                            <span id="p1-progress-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-3 sm:h-4 overflow-hidden">
+                            <div id="p1-progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 sm:h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-lg p-3 sm:p-4">
+                        <p class="text-xs sm:text-sm text-gray-400 mb-2">Status:</p>
+                        <p class="text-base sm:text-lg font-semibold" id="p1-status">Running...</p>
+                    </div>
+                </div>
+
+                 Player 2 Progress 
+                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-green-500 shadow-xl">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-green-400">Player 2</h3>
+                    <p class="text-base sm:text-lg mb-2" id="battle-p2-algo-name">Merge Sort</p>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs sm:text-sm mb-1">
+                            <span>Progress</span>
+                            <span id="p2-progress-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-3 sm:h-4 overflow-hidden">
+                            <div id="p2-progress-bar" class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 sm:h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-lg p-3 sm:p-4">
+                        <p class="text-xs sm:text-sm text-gray-400 mb-2">Status:</p>
+                        <p class="text-base sm:text-lg font-semibold" id="p2-status">Running...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-6 sm:mt-8">
+                <button onclick="showScreen('results')" id="view-results-btn" class="hidden w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-8 sm:px-12 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base">
+                    View Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+ 
+    <div id="results" class="hidden min-h-screen p-4 sm:p-6 pt-20">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-6 sm:mb-8">
+                <div id="winner-banner" class="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold text-2xl sm:text-3xl md:text-4xl px-6 sm:px-8 md:px-12 py-4 sm:py-5 md:py-6 rounded-xl shadow-2xl glow-animation mb-4">
+                    🏆 Player 1 Wins! 🏆
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                 Player 1 Results 
+                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-blue-500 shadow-xl">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-blue-400">Player 1 Results</h3>
+                    
+                    <div class="space-y-2 sm:space-y-3">
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Algorithm</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r1-algo">Quick Sort</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Comparisons</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r1-comparisons">142</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Execution Time</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r1-time">2.34 ms</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Memory Usage</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r1-memory">1.2 KB</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Score</p>
+                            <p class="text-xl sm:text-2xl font-bold text-blue-400" id="r1-score">950</p>
+                        </div>
+                    </div>
+                </div>
+
+                 Player 2 Results 
+                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-green-500 shadow-xl">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-green-400">Player 2 Results</h3>
+                    
+                    <div class="space-y-2 sm:space-y-3">
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Algorithm</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r2-algo">Merge Sort</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Comparisons</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r2-comparisons">168</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Execution Time</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r2-time">3.12 ms</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Memory Usage</p>
+                            <p class="text-base sm:text-lg font-semibold" id="r2-memory">1.8 KB</p>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
+                            <p class="text-xs sm:text-sm text-gray-400">Score</p>
+                            <p class="text-xl sm:text-2xl font-bold text-green-400" id="r2-score">820</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <button onclick="resetGame()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base">
+                    Play Again
+                </button>
+                <button onclick="showScreen('landing-screen')" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base">
+                    Exit to Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+</body>
+</html>
