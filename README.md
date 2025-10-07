@@ -1,4 +1,4 @@
-#ADVAIT IS GAYYYYYY
+# ADVAIT IS GAYYYYYY
 # Battlefield of Algorithms – Project Structure
 
 This project is a competitive platform where two users pick algorithms (sorting, searching, graph, or dynamic programming) and compare them based on execution time, memory usage, correctness, and scoring.
