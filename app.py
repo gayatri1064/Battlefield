@@ -104,16 +104,38 @@ def execute_battle():
         player2_data = data['player2']
         input_size = data.get('input_size', 20)
         
-        # Generate input data
-        generated_data = generate_input(player1_data['category'], input_size)
-        data1 = get_unified_input(player1_data['category'], generated_data, size=input_size, custom=False)
-        data2 = get_unified_input(player2_data['category'], generated_data, size=input_size, custom=False)
+        # Prepare input data for each player. If the client provided a custom_input
+        # in their selection, use that; otherwise generate a default input per category.
+        generated1 = generate_input(player1_data['category'], input_size)
+        generated2 = generate_input(player2_data['category'], input_size)
+
+        if 'custom_input' in player1_data and player1_data['custom_input'] is not None:
+            data1 = get_unified_input(player1_data['category'], player1_data['custom_input'], size=input_size, custom=True)
+        else:
+            data1 = get_unified_input(player1_data['category'], generated1, size=input_size, custom=False)
+
+        if 'custom_input' in player2_data and player2_data['custom_input'] is not None:
+            data2 = get_unified_input(player2_data['category'], player2_data['custom_input'], size=input_size, custom=True)
+        else:
+            data2 = get_unified_input(player2_data['category'], generated2, size=input_size, custom=False)
         
         # Find algorithm functions
-        player1_algo = next((algo for algo in algorithms[player1_data['category']] 
-                           if algo['name'] == player1_data['algorithm']), None)
-        player2_algo = next((algo for algo in algorithms[player2_data['category']] 
-                           if algo['name'] == player2_data['algorithm']), None)
+        # First try to find by algorithm_key if provided, then by name
+        player1_algo = None
+        if 'algorithm_key' in player1_data:
+            player1_algo = next((algo for algo in algorithms[player1_data['category']] 
+                               if algo.get('key') == player1_data['algorithm_key']), None)
+        if not player1_algo:
+            player1_algo = next((algo for algo in algorithms[player1_data['category']] 
+                               if algo['name'] == player1_data['algorithm']), None)
+        
+        player2_algo = None
+        if 'algorithm_key' in player2_data:
+            player2_algo = next((algo for algo in algorithms[player2_data['category']] 
+                               if algo.get('key') == player2_data['algorithm_key']), None)
+        if not player2_algo:
+            player2_algo = next((algo for algo in algorithms[player2_data['category']] 
+                               if algo['name'] == player2_data['algorithm']), None)
         
         if not player1_algo or not player2_algo:
             return jsonify({'error': 'Algorithm not found'}), 404
@@ -145,7 +167,7 @@ def execute_battle():
         # Prepare detailed results
         results = {
             'player1': {
-                'name': player1_data['algorithm'],
+                'name': player1_algo['name'],  # Use the name from the algorithm object, not the key
                 'category': player1_data['category'],
                 'result': str(result1),
                 'time': f"{time1:.6f}",
@@ -156,7 +178,7 @@ def execute_battle():
                 'time_ms': f"{(time1 * 1000):.2f}"
             },
             'player2': {
-                'name': player2_data['algorithm'],
+                'name': player2_algo['name'],  # Use the name from the algorithm object, not the key
                 'category': player2_data['category'],
                 'result': str(result2),
                 'time': f"{time2:.6f}",
@@ -177,10 +199,12 @@ def execute_battle():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# FIXED: Only one create_room endpoint
 @app.route('/api/room/create', methods=['POST'])
 def create_room():
     """Create a new game room"""
     room_code = generate_room_code()
+    # Note: creator_sid will be set when player 1 joins via socket
     rooms[room_code] = GameRoom(room_code, None)
     return jsonify({'room_code': room_code, 'message': 'Room created successfully'})
 
@@ -221,12 +245,17 @@ def handle_join_room(data):
     
     room = rooms[room_code]
     
+    # Set creator_sid if this is the first player
+    if room.creator_sid is None and player_id == 1:
+        room.creator_sid = request.sid
+    
     # Add player to room
     if room.add_player(player_id, request.sid):
         join_room(room_code)
         emit('player_joined', {
             'player_id': player_id,
-            'room_code': room_code
+            'room_code': room_code,
+            'players_count': len(room.players)
         }, room=room_code)
         
         # If both players joined, notify them

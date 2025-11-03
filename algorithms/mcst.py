@@ -1,5 +1,10 @@
 import heapq
+
 def kruskal(graph, start=None):
+    """
+    Kruskal's algorithm using Python's built-in sort for edge sorting.
+    Uses Union-Find data structure for cycle detection.
+    """
     parent = {}
     rank = {}
 
@@ -24,13 +29,13 @@ def kruskal(graph, start=None):
         parent[node] = node
         rank[node] = 0
 
-    # Create a list of edges and sort by weight
+    # Create a list of edges and sort by weight using Python's built-in sort (Timsort)
     edges = []
     for u in graph:
         for v, weight in graph[u].items():
             if (v, u, weight) not in edges:  # avoid duplicates in undirected graph
                 edges.append((u, v, weight))
-    edges.sort(key=lambda x: x[2])
+    edges.sort(key=lambda x: x[2])  # Python's optimized Timsort algorithm
 
     mst = []
     for u, v, weight in edges:
@@ -41,9 +46,13 @@ def kruskal(graph, start=None):
     return mst
 
 def prim(graph, start):
+    """
+    Prim's algorithm using Python's heapq module for priority queue.
+    Much faster than manual priority queue implementation.
+    """
     visited = set([start])
     edges = [(weight, start, neighbor) for neighbor, weight in graph[start].items()]
-    heapq.heapify(edges)
+    heapq.heapify(edges)  # Python's optimized heap construction
     mst = []
     while edges:
         weight, frm, to = heapq.heappop(edges)

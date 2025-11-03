@@ -34,10 +34,25 @@ function initializeValidation() {
 }
 
 function validatePlayerSelection(player) {
-    const category = document.getElementById(`p${player}-category`).value;
-    const algorithm = document.getElementById(`p${player}-algorithm`).value;
-    const arraySize = document.getElementById(`p${player}-array-size`).value;
-    const customArray = document.getElementById(`p${player}-custom-array`).value;
+    // If a newer checkPlayerSelection implementation exists (in main.js), delegate to it
+    if (window.checkPlayerSelection && typeof window.checkPlayerSelection === 'function') {
+        try {
+            window.checkPlayerSelection(player);
+            return;
+        } catch (e) {
+            console.warn('validatePlayerSelection: delegation to checkPlayerSelection failed', e);
+            // fall through to original validation logic
+        }
+    }
+    const categoryEl = document.getElementById(`p${player}-category`);
+    const algorithmEl = document.getElementById(`p${player}-algorithm`);
+    const arraySizeEl = document.getElementById(`p${player}-array-size`);
+    const customArrayEl = document.getElementById(`p${player}-custom-array`);
+
+    const category = categoryEl ? categoryEl.value : '';
+    const algorithm = algorithmEl ? algorithmEl.value : '';
+    const arraySize = arraySizeEl ? arraySizeEl.value : '';
+    const customArray = customArrayEl ? customArrayEl.value : '';
     
     // Check if we have a valid array (either generated or custom)
     const currentArrayElement = document.getElementById(`p${player}-current-array`);
@@ -66,7 +81,8 @@ function validatePlayerSelection(player) {
 
 // Enhanced generateRandomArray function
 function generateRandomArray(player) {
-    const size = document.getElementById(`p${player}-array-size`).value;
+    const sizeEl = document.getElementById(`p${player}-array-size`);
+    const size = sizeEl ? parseInt(sizeEl.value) || 20 : 20;
     const array = Array.from({ length: size }, () => Math.floor(Math.random() * 100) + 1);
     
     const arrayDisplay = document.getElementById(`p${player}-current-array`);
@@ -83,9 +99,9 @@ function generateRandomArray(player) {
 
     // Store the array in game state
     if (player === 1) {
-        gameState.player1.array = array;
+        globalGameState.player1.array = array;
     } else {
-        gameState.player2.array = array;
+        globalGameState.player2.array = array;
     }
     
     validatePlayerSelection(player);
@@ -100,6 +116,8 @@ function checkPlayerSelection(player) {
 function updateAlgorithms(player, category) {
     const select = document.getElementById(`p${player}-algorithm`);
     const infoDiv = document.getElementById(`p${player}-algo-info`);
+
+    if (!select || !infoDiv) return;
 
     select.innerHTML = '<option value="">Select Algorithm</option>';
     infoDiv.innerHTML = '<p class="text-gray-400 text-xs sm:text-sm">Select an algorithm to see details</p>';
@@ -158,9 +176,9 @@ function setupCustomArrayHandling() {
                         
                         // Store in game state
                         if (player === 1) {
-                            gameState.player1.array = numbers;
+                            globalGameState.player1.array = numbers;
                         } else {
-                            gameState.player2.array = numbers;
+                            globalGameState.player2.array = numbers;
                         }
                         
                     } catch (error) {
@@ -180,14 +198,23 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeValidation();
     setupCustomArrayHandling();
     
-    // Also add array size slider listeners
-    document.getElementById("p1-array-size").addEventListener("input", (e) => {
-        document.getElementById("p1-array-size-display").textContent = e.target.value;
-        validatePlayerSelection(1);
-    });
+    // Also add array size slider listeners if the elements exist
+    const p1SizeEl = document.getElementById("p1-array-size");
+    const p2SizeEl = document.getElementById("p2-array-size");
+    const p1SizeDisplay = document.getElementById("p1-array-size-display");
+    const p2SizeDisplay = document.getElementById("p2-array-size-display");
 
-    document.getElementById("p2-array-size").addEventListener("input", (e) => {
-        document.getElementById("p2-array-size-display").textContent = e.target.value;
-        validatePlayerSelection(2);
-    });
+    if (p1SizeEl) {
+        p1SizeEl.addEventListener("input", (e) => {
+            if (p1SizeDisplay) p1SizeDisplay.textContent = e.target.value;
+            validatePlayerSelection(1);
+        });
+    }
+
+    if (p2SizeEl) {
+        p2SizeEl.addEventListener("input", (e) => {
+            if (p2SizeDisplay) p2SizeDisplay.textContent = e.target.value;
+            validatePlayerSelection(2);
+        });
+    }
 });

@@ -1,18 +1,23 @@
 # algorithms/string_matching.py
 
 def naive_search(text, pattern):
-    """Naive pattern matching algorithm."""
+    """Naive pattern matching using Python's built-in string methods."""
     matches = []
-    n, m = len(text), len(pattern)
-
-    for i in range(n - m + 1):
-        if text[i:i+m] == pattern:
-            matches.append(i)
+    start = 0
+    while True:
+        pos = text.find(pattern, start)
+        if pos == -1:
+            break
+        matches.append(pos)
+        start = pos + 1
     return matches
 
 
 def kmp_search(text, pattern):
-    """Knuth-Morris-Pratt (KMP) algorithm."""
+    """
+    Knuth-Morris-Pratt (KMP) algorithm.
+    No built-in equivalent - manual implementation for educational purposes.
+    """
     def compute_lps(pattern):
         lps = [0] * len(pattern)
         length = 0
@@ -51,7 +56,10 @@ def kmp_search(text, pattern):
 
 
 def rabin_karp(text, pattern, prime=101):
-    """Rabin-Karp algorithm using rolling hash."""
+    """
+    Rabin-Karp algorithm using rolling hash.
+    No built-in equivalent - manual implementation for educational purposes.
+    """
     matches = []
     n, m = len(text), len(pattern)
     d = 256  # alphabet size
@@ -83,7 +91,10 @@ def rabin_karp(text, pattern, prime=101):
 
 
 def boyer_moore(text, pattern):
-    """Boyer-Moore algorithm with bad character heuristic."""
+    """
+    Boyer-Moore algorithm with bad character heuristic.
+    No built-in equivalent - manual implementation for educational purposes.
+    """
     def bad_char_table(pattern):
         table = {}
         length = len(pattern)
