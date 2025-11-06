@@ -1,8 +1,6 @@
 from utils.helpers import choose_category, choose_algorithm, generate_input, get_unified_input
 from utils.battle_runner import execute_battle, print_results
 from algorithms.library import algorithms
-
-
 from utils.helpers import choose_category, choose_algorithm, generate_input, get_unified_input
 from utils.profiler import run_algorithm
 from utils.scoring import score_algorithm

@@ -10,6 +10,7 @@ from utils.helpers import generate_input, get_unified_input
 from utils.profiler import run_algorithm
 from utils.scoring import score_algorithm
 from algorithms.library import algorithms
+from algorithms.knapsack import knapsack_dp
 
 app = Flask(__name__)
 app.secret_key = 'algorithm-battlefield-secret-key-2024'
@@ -104,16 +105,40 @@ def execute_battle():
         player2_data = data['player2']
         input_size = data.get('input_size', 20)
         
-        # Generate input data
-        generated_data = generate_input(player1_data['category'], input_size)
-        data1 = get_unified_input(player1_data['category'], generated_data, size=input_size, custom=False)
-        data2 = get_unified_input(player2_data['category'], generated_data, size=input_size, custom=False)
+        # Prepare input data for each player. If the client provided a custom_input
+        # in their selection, use that per-player; otherwise generate a default
+        # input for that player's selected category. This evaluates each player's
+        # algorithm on their own provided or generated input.
+        generated1 = generate_input(player1_data['category'], input_size)
+        generated2 = generate_input(player2_data['category'], input_size)
+
+        if 'custom_input' in player1_data and player1_data['custom_input'] is not None:
+            data1 = get_unified_input(player1_data['category'], player1_data['custom_input'], size=input_size, custom=True)
+        else:
+            data1 = get_unified_input(player1_data['category'], generated1, size=input_size, custom=False)
+
+        if 'custom_input' in player2_data and player2_data['custom_input'] is not None:
+            data2 = get_unified_input(player2_data['category'], player2_data['custom_input'], size=input_size, custom=True)
+        else:
+            data2 = get_unified_input(player2_data['category'], generated2, size=input_size, custom=False)
         
         # Find algorithm functions
-        player1_algo = next((algo for algo in algorithms[player1_data['category']] 
-                           if algo['name'] == player1_data['algorithm']), None)
-        player2_algo = next((algo for algo in algorithms[player2_data['category']] 
-                           if algo['name'] == player2_data['algorithm']), None)
+        # First try to find by algorithm_key if provided, then by name
+        player1_algo = None
+        if 'algorithm_key' in player1_data:
+            player1_algo = next((algo for algo in algorithms[player1_data['category']] 
+                               if algo.get('key') == player1_data['algorithm_key']), None)
+        if not player1_algo:
+            player1_algo = next((algo for algo in algorithms[player1_data['category']] 
+                               if algo['name'] == player1_data['algorithm']), None)
+        
+        player2_algo = None
+        if 'algorithm_key' in player2_data:
+            player2_algo = next((algo for algo in algorithms[player2_data['category']] 
+                               if algo.get('key') == player2_data['algorithm_key']), None)
+        if not player2_algo:
+            player2_algo = next((algo for algo in algorithms[player2_data['category']] 
+                               if algo['name'] == player2_data['algorithm']), None)
         
         if not player1_algo or not player2_algo:
             return jsonify({'error': 'Algorithm not found'}), 404
@@ -124,6 +149,137 @@ def execute_battle():
         
         time1, mem1, correct1, result1 = run_algorithm(func1, *data1)
         time2, mem2, correct2, result2 = run_algorithm(func2, *data2)
+
+        # Extract algorithm result value and comparison counts robustly.
+        # Algorithms may return:
+        # - value
+        # - (value, comparisons)
+        # - ((value, selection), comparisons)  (e.g., knapsack)
+        # We'll recursively search tuples/lists for an int comparisons value at the
+        # last position and return the main value and comparisons (or 0 if none).
+        def extract_result_and_comparisons(obj):
+            # If obj is not tuple/list, it's the value with no comparisons
+            if not isinstance(obj, (list, tuple)):
+                return obj, 0
+            # If tuple/list and last element is int, treat it as comparisons
+            if len(obj) >= 2 and isinstance(obj[-1], int):
+                value = obj[0]
+                comps = obj[-1]
+                return value, comps
+            # Otherwise, try to recurse into the first element
+            if len(obj) >= 1:
+                val, comps = extract_result_and_comparisons(obj[0])
+                # If comps found deeper, return it
+                return val, comps
+            return obj, 0
+
+        result1_val, comparisons1 = extract_result_and_comparisons(result1)
+        result2_val, comparisons2 = extract_result_and_comparisons(result2)
+        # Replace result1/result2 with the unwrapped values for later checks
+        result1 = result1_val
+        result2 = result2_val
+
+        # --- compute expected results for correctness verification ---
+        def compute_expected(category, data_args):
+            """Return an expected result for common categories or None if unknown.
+
+            data_args is a tuple of arguments as returned by get_unified_input.
+            """
+            cat = category.lower()
+            try:
+                if cat == 'string matching':
+                    # data_args -> (text, pattern)
+                    text, pattern = data_args
+                    expected = [i for i in range(len(text)) if text.startswith(pattern, i)]
+                    return expected
+
+                if cat == 'sorting':
+                    # data_args -> (arr,)
+                    arr = data_args[0]
+                    return sorted(arr)
+
+                if cat == 'searching':
+                    # data_args -> (arr, target)
+                    arr, target = data_args
+                    # Many search implementations return an index or -1.
+                    # For correctness, consider whether the target exists in the array.
+                    return (target in arr)
+
+                if cat == 'subset generation':
+                    # data_args -> (arr,)
+                    arr = list(data_args[0])
+                    # Generate canonical subsets using itertools
+                    from itertools import chain, combinations
+                    def powerset(iterable):
+                        s = list(iterable)
+                        return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+                    expected = [list(x) for x in powerset(arr)]
+                    return expected
+
+                if cat == "0/1 knapsack":
+                    # data_args -> (values, weights, capacity)
+                    values, weights, capacity = data_args
+                    # Use DP implementation as reference
+                    try:
+                        res = knapsack_dp(values, weights, capacity)
+                        # knapsack_dp may return ((value, selection), comparisons) or (value, selection)
+                        if isinstance(res, tuple) and len(res) == 2 and isinstance(res[0], tuple):
+                            best_value = res[0][0]
+                        elif isinstance(res, tuple) and len(res) >= 2:
+                            best_value = res[0]
+                        else:
+                            best_value = res
+                        return best_value
+                    except Exception as e:
+                        print(f"Error computing knapsack expected: {e}")
+                        return None
+
+            except Exception as e:
+                print(f"Error while computing expected for category {category}: {e}")
+                return None
+
+            return None
+
+        expected1 = compute_expected(player1_data['category'], data1)
+        expected2 = compute_expected(player2_data['category'], data2)
+
+        # Overwrite correctness where we can compute an expected value
+        # For string matching and sorting/subset/knapsack we can compare outputs
+        try:
+            cat1 = player1_data['category'].lower()
+            if expected1 is not None:
+                if cat1 == 'string matching':
+                    correct1 = (result1 == expected1)
+                elif cat1 == 'sorting':
+                    correct1 = (result1 == expected1)
+                elif cat1 == 'searching':
+                    # expected1 is boolean whether target in arr
+                    correct1 = ((result1 != -1) == expected1)
+                elif cat1 == 'subset generation':
+                    # Compare as sets of tuples to ignore ordering
+                    set_res = set(tuple(sorted(x)) for x in result1) if result1 is not None else set()
+                    set_exp = set(tuple(sorted(x)) for x in expected1)
+                    correct1 = (set_res == set_exp)
+                elif cat1 == '0/1 knapsack':
+                    # expected1 is best value
+                    correct1 = (isinstance(result1, (list, tuple)) and result1[0] == expected1) or (result1 == expected1)
+
+            cat2 = player2_data['category'].lower()
+            if expected2 is not None:
+                if cat2 == 'string matching':
+                    correct2 = (result2 == expected2)
+                elif cat2 == 'sorting':
+                    correct2 = (result2 == expected2)
+                elif cat2 == 'searching':
+                    correct2 = ((result2 != -1) == expected2)
+                elif cat2 == 'subset generation':
+                    set_res = set(tuple(sorted(x)) for x in result2) if result2 is not None else set()
+                    set_exp = set(tuple(sorted(x)) for x in expected2)
+                    correct2 = (set_res == set_exp)
+                elif cat2 == '0/1 knapsack':
+                    correct2 = (isinstance(result2, (list, tuple)) and result2[0] == expected2) or (result2 == expected2)
+        except Exception as e:
+            print(f"Error while validating results against expected: {e}")
         
         # Calculate scores
         fastest_time = min(time1, time2)
@@ -145,25 +301,25 @@ def execute_battle():
         # Prepare detailed results
         results = {
             'player1': {
-                'name': player1_data['algorithm'],
+                'name': player1_algo['name'],  # Use the name from the algorithm object, not the key
                 'category': player1_data['category'],
                 'result': str(result1),
                 'time': f"{time1:.6f}",
                 'memory': f"{mem1:.2f}",
                 'correct': correct1,
                 'score': f"{score1:.3f}",
-                'comparisons': random.randint(100, 500),  # Placeholder - you can add actual comparison counting
+                'comparisons': int(comparisons1),
                 'time_ms': f"{(time1 * 1000):.2f}"
             },
             'player2': {
-                'name': player2_data['algorithm'],
+                'name': player2_algo['name'],  # Use the name from the algorithm object, not the key
                 'category': player2_data['category'],
                 'result': str(result2),
                 'time': f"{time2:.6f}",
                 'memory': f"{mem2:.2f}",
                 'correct': correct2,
                 'score': f"{score2:.3f}",
-                'comparisons': random.randint(100, 500),  # Placeholder
+                'comparisons': int(comparisons2),
                 'time_ms': f"{(time2 * 1000):.2f}"
             },
             'winner': winner,
@@ -172,15 +328,25 @@ def execute_battle():
             'input_size': input_size
         }
         
+        # Debug: print comparison counts and full results so logs show what was returned
+        try:
+            print(f"DEBUG: comparisons1={comparisons1}, comparisons2={comparisons2}")
+            print(f"DEBUG: results payload: {json.dumps(results)}")
+        except Exception:
+            # Avoid failure in logging
+            pass
+
         return jsonify(results)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# FIXED: Only one create_room endpoint
 @app.route('/api/room/create', methods=['POST'])
 def create_room():
     """Create a new game room"""
     room_code = generate_room_code()
+    # Note: creator_sid will be set when player 1 joins via socket
     rooms[room_code] = GameRoom(room_code, None)
     return jsonify({'room_code': room_code, 'message': 'Room created successfully'})
 
@@ -221,12 +387,17 @@ def handle_join_room(data):
     
     room = rooms[room_code]
     
+    # Set creator_sid if this is the first player
+    if room.creator_sid is None and player_id == 1:
+        room.creator_sid = request.sid
+    
     # Add player to room
     if room.add_player(player_id, request.sid):
         join_room(room_code)
         emit('player_joined', {
             'player_id': player_id,
-            'room_code': room_code
+            'room_code': room_code,
+            'players_count': len(room.players)
         }, room=room_code)
         
         # If both players joined, notify them

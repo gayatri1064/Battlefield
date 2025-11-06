@@ -42,6 +42,78 @@
         .spinner {
             animation: spin 1s linear infinite;
         }
+        .progress-bar-container {
+        width: 100%;
+        background-color: #374151;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 20px;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        border-radius: 10px;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+    
+    .progress-fill.player2 {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 0.875rem;
+    }
+    
+    /* Ensure room code and content stay below navbar */
+    .navbar-offset {
+        padding-top: calc(4rem + 1.5rem); /* navbar height + extra spacing */
+    }
+    
+    @media (min-width: 640px) {
+        .navbar-offset {
+            padding-top: calc(4rem + 2rem); /* More spacing on larger screens */
+        }
+    }
+    
+    /* Additional safety margin for room code specifically */
+    #room-code {
+        position: relative;
+        z-index: 10;
+    }
+    
+    /* Results layout improvements */
+    .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        min-height: 400px;
+    }
+    
+    @media (max-width: 640px) {
+        .results-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    
+    .result-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .algorithm-header {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
     </style>
 </head>
 <body class="bg-gradient-to-br from-dark via-slate-900 to-dark-lighter text-white min-h-screen">
@@ -76,7 +148,7 @@
     </nav>
 
     <div id="landing-screen" class="min-h-screen flex items-center justify-center p-4 sm:p-6">
-        <div class="text-center slide-up">
+        <div class="max-w-4xl mx-auto text-center slide-up">
             <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-cyan-400 to-green-400 bg-clip-text text-transparent px-4">
                 Algorithm Battle Arena ⚔️
             </h1>
@@ -84,13 +156,13 @@
                 Pick your algorithm, run the input, and see who wins!
             </p>
             <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
-                <button onclick="createRoom()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 glow-animation">
+                <button onclick="window.createRoom()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 glow-animation">
                     Create Room
                 </button>
-                <button onclick="joinRoom()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105">
+                <button onclick="window.joinRoom()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105">
                     Join Room
                 </button>
-                <button onclick="alert('Algorithm learning resources coming soon!')" class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105">
+                <button onclick="window.showLearnDialog()" class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105">
                     Learn Algorithms
                 </button>
             </div>
@@ -98,14 +170,15 @@
     </div>
 
  
-    <div id="room-setup" class="hidden min-h-screen p-4 sm:p-6 pt-20">
+    <div id="room-setup" class="hidden min-h-screen p-4 sm:p-6 pt-24 sm:pt-28">
         <div class="max-w-7xl mx-auto">
             
-            <div class="text-center mb-6 sm:mb-8">
-                <h2 class="text-xl sm:text-2xl font-bold mb-2">Room Code</h2>
-                <div class="inline-block bg-dark-lighter px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-2 border-cyan-500">
+            <div class="text-center mb-6 sm:mb-8 mt-6">
+                <h2 class="text-xl sm:text-2xl font-bold mb-3">Room Code</h2>
+                <div class="inline-block bg-dark-lighter px-4 sm:px-6 py-3 sm:py-4 rounded-lg border-2 border-cyan-500 shadow-lg">
                     <span class="text-xl sm:text-2xl md:text-3xl font-mono font-bold text-cyan-400" id="room-code">ABC123</span>
                 </div>
+                <p class="text-sm text-gray-400 mt-2">Share this code with your opponent</p>
             </div>
 
             <div class="flex flex-row gap-2 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
@@ -119,12 +192,16 @@
                      Category Selection 
                     <div class="mb-3 sm:mb-4">
                         <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Algorithm Category</label>
-                        <select id="p1-category" onchange="updateAlgorithms(1, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-blue-500">
+                        <select id="p1-category" onchange="window.updateAlgorithms(1, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-blue-500">
                             <option value="">Select Category</option>
                             <option value="sorting">Sorting</option>
                             <option value="searching">Searching</option>
-                            <option value="graph">Graph</option>
-                            <option value="dynamic">Dynamic Programming</option>
+                            <option value="graph">Graph Traversal</option>
+                            <option value="shortest path">Shortest Path</option>
+                            <option value="mst">Minimum Spanning Tree</option>
+                            <option value="string matching">String Matching</option>
+                            <option value="subset generation">Subset Generation</option>
+                            <option value="0/1 knapsack">0/1 Knapsack</option>
                         </select>
                     </div>
 
@@ -142,22 +219,12 @@
                     </div>
 
                      Input Configuration 
-                    <div class="mb-3 sm:mb-4">
-                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Array Size</label>
-                        <input type="range" min="5" max="100" value="20" id="p1-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                        <div class="text-center mt-1">
-                            <span class="text-sm sm:text-lg lg:text-xl font-bold text-blue-400" id="p1-array-size-display">20</span> <span class="text-xs sm:text-sm">elements</span>
+                    <div id="p1-input-section">
+                        <!-- Dynamic input fields will be populated here based on category -->
+                        <div class="text-center text-gray-400 text-sm">
+                            Select a category and algorithm to see input options
                         </div>
                     </div>
-
-                    <div class="mb-3 sm:mb-4">
-                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Custom Array</label>
-                        <input type="text" id="p1-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-blue-500">
-                    </div>
-
-                    <button onclick="generateRandomArray(1)" id="p1-generate-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
-                        Generate Random
-                    </button>
 
                     <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
                         <p class="text-xs font-semibold mb-1 sm:mb-2">Current Array:</p>
@@ -178,22 +245,44 @@
                     
                      Category Selection 
                     <div class="mb-3 sm:mb-4">
-                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Algorithm Category</label>
-                        <select id="p2-category" onchange="updateAlgorithms(2, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-green-500">
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">
+                            Algorithm Category
+                            <span class="ml-1 text-yellow-400" title="Auto-matches Player 1's selection">
+                                <i class="fas fa-lock text-xs"></i>
+                            </span>
+                        </label>
+                        <select id="p2-category" onchange="window.updateAlgorithms(2, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-green-500">
                             <option value="">Select Category</option>
                             <option value="sorting">Sorting</option>
                             <option value="searching">Searching</option>
-                            <option value="graph">Graph</option>
-                            <option value="dynamic">Dynamic Programming</option>
+                            <option value="graph">Graph Traversal</option>
+                            <option value="shortest path">Shortest Path</option>
+                            <option value="mst">Minimum Spanning Tree</option>
+                            <option value="string matching">String Matching</option>
+                            <option value="subset generation">Subset Generation</option>
+                            <option value="0/1 knapsack">0/1 Knapsack</option>
                         </select>
+                        <p class="text-xs text-cyan-400 mt-1 opacity-75">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Category locked to Player 1's choice - algorithm selection remains free
+                        </p>
                     </div>
 
-                     Algorithm Selection 
+                    <!-- Algorithm Selection -->
                     <div class="mb-3 sm:mb-4">
-                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Algorithm</label>
+                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">
+                            Algorithm
+                            <span class="ml-1 text-green-400" title="Free choice within the category">
+                                <i class="fas fa-check-circle text-xs"></i>
+                            </span>
+                        </label>
                         <select id="p2-algorithm" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-green-500">
                             <option value="">Select Algorithm</option>
                         </select>
+                        <p class="text-xs text-green-400 mt-1 opacity-75">
+                            <i class="fas fa-unlock-alt mr-1"></i>
+                            Choose any algorithm within the category for strategic advantage
+                        </p>
                     </div>
 
                      Algorithm Info 
@@ -202,26 +291,11 @@
                     </div>
 
                      Input Configuration 
-                    <div class="mb-3 sm:mb-4">
-                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Array Size</label>
-                        <input type="range" min="5" max="100" value="20" id="p2-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                        <div class="text-center mt-1">
-                            <span class="text-sm sm:text-lg lg:text-xl font-bold text-green-400" id="p2-array-size-display">20</span> <span class="text-xs sm:text-sm">elements</span>
+                    <div id="p2-input-section">
+                        <!-- Dynamic input fields will be populated here based on category -->
+                        <div class="text-center text-gray-400 text-sm">
+                            Select a category and algorithm to see input options
                         </div>
-                    </div>
-
-                    <div class="mb-3 sm:mb-4">
-                        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Custom Array</label>
-                        <input type="text" id="p2-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-green-500">
-                    </div>
-
-                    <button onclick="generateRandomArray(2)" id="p2-generate-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
-                        Generate Random
-                    </button>
-
-                    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
-                        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Array:</p>
-                        <p class="text-xs font-mono text-cyan-400 break-all" id="p2-current-array">[Click Generate]</p>
                     </div>
 
                     <button onclick="confirmPlayerSelection(2)" id="p2-confirm-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1 sm:py-2 lg:py-3 rounded-lg transition-all text-xs sm:text-sm lg:text-base" disabled>
@@ -232,76 +306,7 @@
         </div>
     </div>
 
- 
-    <div id="player1-selection" class="hidden min-h-screen p-4 sm:p-6 pt-20">
-        <div class="max-w-4xl mx-auto">
-             Room Code Display 
-            <div class="text-center mb-6">
-                <h2 class="text-xl sm:text-2xl font-bold mb-2">Room Code</h2>
-                <div class="inline-block bg-dark-lighter px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-2 border-blue-500">
-                    <span class="text-xl sm:text-2xl font-mono font-bold text-blue-400" id="room-code-p1">ABC123</span>
-                </div>
-            </div>
-
-            <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 md:p-8 shadow-xl border-2 border-blue-500">
-                <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-blue-400">Player 1 - Make Your Selection</h2>
-                
-                 Category Selection 
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm Category</label>
-                    <select id="p1-category" onchange="updateAlgorithms(1, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-blue-500">
-                        <option value="">Select Category</option>
-                        <option value="sorting">Sorting</option>
-                        <option value="searching">Searching</option>
-                        <option value="graph">Graph</option>
-                        <option value="dynamic">Dynamic Programming</option>
-                    </select>
-                </div>
-
-                 Algorithm Selection 
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm</label>
-                    <select id="p1-algorithm" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-blue-500">
-                        <option value="">Select Algorithm</option>
-                    </select>
-                </div>
-
-                 Algorithm Info 
-                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6" id="p1-algo-info">
-                    <p class="text-gray-400 text-xs sm:text-sm">Select an algorithm to see details</p>
-                </div>
-
-                 Input Configuration 
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Array Size</label>
-                    <input type="range" min="5" max="100" value="20" id="p1-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                    <div class="text-center mt-2">
-                        <span class="text-xl sm:text-2xl font-bold text-blue-400" id="p1-array-size-display">20</span> elements
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Custom Array (comma-separated)</label>
-                    <input type="text" id="p1-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-blue-500">
-                </div>
-
-                <button onclick="generateRandomArray(1)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-all mb-4 text-sm sm:text-base">
-                    Generate Random Array
-                </button>
-
-                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6">
-                    <p class="text-xs sm:text-sm font-semibold mb-2">Current Array:</p>
-                    <p class="text-sm sm:text-base font-mono text-cyan-400 break-all" id="p1-current-array">[Click Generate Random Array]</p>
-                </div>
-
-                <button onclick="submitPlayer1Selection()" id="p1-submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base" disabled>
-                    Confirm Selection
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="waiting-screen" class="hidden min-h-screen p-4 sm:p-6 pt-20 flex items-center justify-center">
+    <div id="waiting-screen" class="hidden min-h-screen p-4 sm:p-6 pt-24 sm:pt-28 flex items-center justify-center">
         <div class="text-center">
             <div class="inline-block w-16 h-16 sm:w-20 sm:h-20 border-4 border-blue-500 border-t-transparent rounded-full spinner mb-6"></div>
             <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Waiting for Player 2...</h2>
@@ -311,134 +316,66 @@
             </div>
         </div>
     </div>
- 
-    <div id="player2-selection" class="hidden min-h-screen p-4 sm:p-6 pt-20">
-        <div class="max-w-4xl mx-auto">
-             Room Code Display 
-            <div class="text-center mb-6">
-                <h2 class="text-xl sm:text-2xl font-bold mb-2">Room Code</h2>
-                <div class="inline-block bg-dark-lighter px-4 sm:px-6 py-2 sm:py-3 rounded-lg border-2 border-green-500">
-                    <span class="text-xl sm:text-2xl font-mono font-bold text-green-400" id="room-code-p2">ABC123</span>
-                </div>
-            </div>
-
-            <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 md:p-8 shadow-xl border-2 border-green-500">
-                <h2 class="text-2xl sm:text-3xl font-bold mb-6 text-green-400">Player 2 - Make Your Selection</h2>
-                
-                 Category Selection 
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm Category</label>
-                    <select id="p2-category" onchange="updateAlgorithms(2, this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-green-500">
-                        <option value="">Select Category</option>
-                        <option value="sorting">Sorting</option>
-                        <option value="searching">Searching</option>
-                        <option value="graph">Graph</option>
-                        <option value="dynamic">Dynamic Programming</option>
-                    </select>
-                </div>
-
-                 Algorithm Selection 
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Algorithm</label>
-                    <select id="p2-algorithm" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-green-500">
-                        <option value="">Select Algorithm</option>
-                    </select>
-                </div>
-
-                 Algorithm Info 
-                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6" id="p2-algo-info">
-                    <p class="text-gray-400 text-xs sm:text-sm">Select an algorithm to see details</p>
-                </div>
-
-                 Input Configuration 
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Array Size</label>
-                    <input type="range" min="5" max="100" value="20" id="p2-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                    <div class="text-center mt-2">
-                        <span class="text-xl sm:text-2xl font-bold text-green-400" id="p2-array-size-display">20</span> elements
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-base sm:text-lg font-semibold mb-3">Custom Array (comma-separated)</label>
-                    <input type="text" id="p2-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-green-500">
-                </div>
-
-                <button onclick="generateRandomArray(2)" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-all mb-4 text-sm sm:text-base">
-                    Generate Random Array
-                </button>
-
-                <div class="bg-slate-800 rounded-lg p-3 sm:p-4 mb-6">
-                    <p class="text-xs sm:text-sm font-semibold mb-2">Current Array:</p>
-                    <p class="text-sm sm:text-base font-mono text-cyan-400 break-all" id="p2-current-array">[Click Generate Random Array]</p>
-                </div>
-
-                <button onclick="submitPlayer2Selection()" id="p2-submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base" disabled>
-                    Start Battle! ⚔️
-                </button>
-            </div>
-        </div>
-    </div>
-
    
-    <div id="battle-progress" class="hidden min-h-screen p-4 sm:p-6 pt-20">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8">Battle in Progress! ⚔️</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                 Player 1 Progress 
-                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-blue-500 shadow-xl">
-                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-blue-400">Player 1</h3>
-                    <p class="text-base sm:text-lg mb-2" id="battle-p1-algo-name">Quick Sort</p>
-                    
-                    <div class="mb-4">
-                        <div class="flex justify-between text-xs sm:text-sm mb-1">
-                            <span>Progress</span>
-                            <span id="p1-progress-text">0%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 rounded-full h-3 sm:h-4 overflow-hidden">
-                            <div id="p1-progress-bar" class="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 sm:h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
+    <!-- BATTLE PROGRESS SCREEN -->
+<div id="battle-progress" class="hidden min-h-screen p-4 sm:p-6 pt-24 sm:pt-28">
+    <div class="max-w-7xl mx-auto">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8">Battle in Progress! ⚔️</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <!-- Player 1 Progress -->
+            <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-blue-500 shadow-xl">
+                <h3 class="text-xl sm:text-2xl font-bold mb-4 text-blue-400">Player 1</h3>
+                <p class="text-base sm:text-lg mb-2 font-semibold" id="battle-p1-algo-name">Player 1 Algorithm</p>
+                
+                <div class="mb-4">
+                    <div class="progress-bar-container">
+                            <div id="p1-progress-bar" class="progress-fill" style="width: 0%"></div>
                     </div>
-
-                    <div class="bg-slate-800 rounded-lg p-3 sm:p-4">
-                        <p class="text-xs sm:text-sm text-gray-400 mb-2">Status:</p>
-                        <p class="text-base sm:text-lg font-semibold" id="p1-status">Running...</p>
+                    <div class="progress-info">
+                        <span>Progress</span>
+                        <span id="p1-progress-text" class="font-semibold">0%</span>
                     </div>
                 </div>
 
-                 Player 2 Progress 
-                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-green-500 shadow-xl">
-                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-green-400">Player 2</h3>
-                    <p class="text-base sm:text-lg mb-2" id="battle-p2-algo-name">Merge Sort</p>
-                    
-                    <div class="mb-4">
-                        <div class="flex justify-between text-xs sm:text-sm mb-1">
-                            <span>Progress</span>
-                            <span id="p2-progress-text">0%</span>
-                        </div>
-                        <div class="w-full bg-slate-700 rounded-full h-3 sm:h-4 overflow-hidden">
-                            <div id="p2-progress-bar" class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 sm:h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-800 rounded-lg p-3 sm:p-4">
-                        <p class="text-xs sm:text-sm text-gray-400 mb-2">Status:</p>
-                        <p class="text-base sm:text-lg font-semibold" id="p2-status">Running...</p>
-                    </div>
+                <div class="bg-slate-800 rounded-lg p-3 sm:p-4">
+                    <p class="text-xs sm:text-sm text-gray-400 mb-2">Status:</p>
+                    <p class="text-base sm:text-lg font-semibold text-blue-400" id="p1-status">Running...</p>
                 </div>
             </div>
 
-            <div class="text-center mt-6 sm:mt-8">
-                <button onclick="showScreen('results')" id="view-results-btn" class="hidden w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-8 sm:px-12 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base">
-                    View Results
-                </button>
+            <!-- Player 2 Progress -->
+            <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-green-500 shadow-xl">
+                <h3 class="text-xl sm:text-2xl font-bold mb-4 text-green-400">Player 2</h3>
+                <p class="text-base sm:text-lg mb-2 font-semibold" id="battle-p2-algo-name">Player 2 Algorithm</p>
+                
+                <div class="mb-4">
+                    <div class="progress-bar-container">
+                            <div id="p2-progress-bar" class="progress-fill player2" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span>Progress</span>
+                        <span id="p2-progress-text" class="font-semibold">0%</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 rounded-lg p-3 sm:p-4">
+                    <p class="text-xs sm:text-sm text-gray-400 mb-2">Status:</p>
+                    <p class="text-base sm:text-lg font-semibold text-green-400" id="p2-status">Running...</p>
+                </div>
             </div>
         </div>
+
+        <div class="text-center mt-6 sm:mt-8">
+            <button onclick="showScreen('results')" id="view-results-btn" class="hidden bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-8 sm:px-12 py-3 sm:py-4 rounded-lg shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base">
+                View Results
+            </button>
+        </div>
     </div>
+</div>
 
  
-    <div id="results" class="hidden min-h-screen p-4 sm:p-6 pt-20">
+    <div id="results" class="hidden min-h-screen p-4 sm:p-6 pt-24 sm:pt-28">
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-6 sm:mb-8">
                 <div id="winner-banner" class="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold text-2xl sm:text-3xl md:text-4xl px-6 sm:px-8 md:px-12 py-4 sm:py-5 md:py-6 rounded-xl shadow-2xl glow-animation mb-4">
@@ -446,16 +383,18 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                 Player 1 Results 
-                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-blue-500 shadow-xl">
-                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-blue-400">Player 1 Results</h3>
+            <div class="results-grid mb-6 sm:mb-8">
+                <!-- Player 1 Results -->
+                <div class="result-card bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-blue-500 shadow-xl">
+                    <div class="algorithm-header text-center">
+                        <h3 class="text-xl sm:text-2xl font-bold text-blue-400 mb-2">🥊 Player 1</h3>
+                        <div class="bg-blue-500/20 rounded-lg p-3 border border-blue-400/30">
+                            <p class="text-lg sm:text-xl font-bold text-blue-100" id="r1-algo">Player 1 Algorithm</p>
+                            <p class="text-xs text-blue-300 mt-1">Algorithm Used</p>
+                        </div>
+                    </div>
                     
                     <div class="space-y-2 sm:space-y-3">
-                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
-                            <p class="text-xs sm:text-sm text-gray-400">Algorithm</p>
-                            <p class="text-base sm:text-lg font-semibold" id="r1-algo">Quick Sort</p>
-                        </div>
                         <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
                             <p class="text-xs sm:text-sm text-gray-400">Comparisons</p>
                             <p class="text-base sm:text-lg font-semibold" id="r1-comparisons">142</p>
@@ -475,15 +414,17 @@
                     </div>
                 </div>
 
-                 Player 2 Results 
-                <div class="bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-green-500 shadow-xl">
-                    <h3 class="text-xl sm:text-2xl font-bold mb-4 text-green-400">Player 2 Results</h3>
+                <!-- Player 2 Results -->
+                <div class="result-card bg-dark-lighter rounded-xl p-4 sm:p-6 border-2 border-red-500 shadow-xl">
+                    <div class="algorithm-header text-center">
+                        <h3 class="text-xl sm:text-2xl font-bold text-red-400 mb-2">⚔️ Player 2</h3>
+                        <div class="bg-red-500/20 rounded-lg p-3 border border-red-400/30">
+                            <p class="text-lg sm:text-xl font-bold text-red-100" id="r2-algo">Player 2 Algorithm</p>
+                            <p class="text-xs text-red-300 mt-1">Algorithm Used</p>
+                        </div>
+                    </div>
                     
                     <div class="space-y-2 sm:space-y-3">
-                        <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
-                            <p class="text-xs sm:text-sm text-gray-400">Algorithm</p>
-                            <p class="text-base sm:text-lg font-semibold" id="r2-algo">Merge Sort</p>
-                        </div>
                         <div class="bg-slate-800 rounded-lg p-2 sm:p-3">
                             <p class="text-xs sm:text-sm text-gray-400">Comparisons</p>
                             <p class="text-base sm:text-lg font-semibold" id="r2-comparisons">168</p>
@@ -514,10 +455,386 @@
             </div>
         </div>
     </div>
+    </div>
+</div>
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
+<!-- Load dependencies -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<!-- Global initialization - MUST be before other scripts -->
+<script>
+    // Initialize Socket.IO connection
+    const socket = io();
+    window.socket = socket;
+    
+    // Socket event handlers
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+    
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+    });
+
+    // Initialize core utility functions
+    window.showLearnDialog = function() {
+        alert('Algorithm learning resources coming soon!');
+    };
+    
+    // Algorithm database - MUST be defined before global.js which uses it
+    window.algorithms = {
+        sorting: [
+            { name: "Bubble Sort", desc: "Input: Array of numbers | Output: Sorted array | Simple comparison-based algorithm", time: "O(n²)" },
+            { name: "Insertion Sort", desc: "Input: Array of numbers | Output: Sorted array | Simple sorting by insertion", time: "O(n²)" },
+            { name: "Merge Sort", desc: "Input: Array of numbers | Output: Sorted array | Stable divide and conquer algorithm", time: "O(n log n)" },
+            { name: "Quick Sort", desc: "Input: Array of numbers | Output: Sorted array | Divide and conquer sorting algorithm", time: "O(n log n) avg, O(n²) worst" },
+            { name: "Selection Sort", desc: "Input: Array of numbers | Output: Sorted array | Simple sorting by selection", time: "O(n²)" },
+            { name: "Heap Sort", desc: "Input: Array of numbers | Output: Sorted array | Comparison-based using Python's heapq module", time: "O(n log n)" },
+            { name: "Python Built-in Sort (Timsort)", desc: "Input: Array of numbers | Output: Sorted array | Optimized hybrid sorting algorithm", time: "O(n log n)" },
+            { name: "Python Heap Sort (Optimized)", desc: "Input: Array of numbers | Output: Sorted array | Optimized using heapq operations", time: "O(n log n)" },
+        ],
+        searching: [
+            { name: "Linear Search", desc: "Input: Array + target | Output: Index or -1 | Sequential search through array", time: "O(n)" },
+            { name: "Binary Search", desc: "Input: Sorted array + target | Output: Index or -1 | Efficient search using bisect module", time: "O(log n)" },
+            { name: "Fibonacci Search", desc: "Input: Sorted array + target | Output: Index or -1 | Divide and conquer search algorithm", time: "O(log n)" },
+            { name: "Python Built-in Search (Optimized)", desc: "Input: Array + target | Output: Index or -1 | Optimized using list.index()", time: "O(n)" },
+        ],
+        graph: [
+            { name: "Breadth-First Search (BFS)", desc: "Input: Graph + start node | Output: Traversal order | Level-order exploration using deque", time: "O(V + E)" },
+            { name: "Depth-First Search (DFS)", desc: "Input: Graph + start node | Output: Traversal order | Deep exploration using recursion", time: "O(V + E)" },
+        ],
+        "shortest path": [
+            { name: "Dijkstra's Algorithm", desc: "Input: Weighted graph + start | Output: Shortest distances | Single-source shortest path", time: "O(E log V)" },
+            { name: "Bellman-Ford Algorithm", desc: "Input: Weighted graph + start | Output: Shortest distances | Handles negative weight edges", time: "O(VE)" },
+            { name: "Floyd-Warshall Algorithm", desc: "Input: Weighted graph | Output: All-pairs distances | All-pairs shortest path algorithm", time: "O(V³)" },
+        ],
+        mst: [
+            { name: "Prim's Algorithm", desc: "Input: Weighted graph | Output: MST edges | Minimum spanning tree using heapq", time: "O(E log V)" },
+            { name: "Kruskal's Algorithm", desc: "Input: Weighted graph | Output: MST edges | MST using Union-Find with sorting", time: "O(E log E)" },
+        ],
+        "string matching": [
+            { name: "Naive Search", desc: "Input: Text + pattern | Output: Match indices | Simple pattern matching algorithm", time: "O(nm)" },
+            { name: "KMP Search", desc: "Input: Text + pattern | Output: Match indices | Knuth-Morris-Pratt algorithm", time: "O(n + m)" },
+            { name: "Rabin-Karp", desc: "Input: Text + pattern | Output: Match indices | Rolling hash pattern matching", time: "O(n + m)" },
+            { name: "Boyer-Moore", desc: "Input: Text + pattern | Output: Match indices | Bad character heuristic algorithm", time: "O(nm)" },
+        ],
+        "subset generation": [
+            { key: "subset_bitmasking", name: "Bitmasking", desc: "Input: Array of elements | Output: All subsets | Generate subsets using bit manipulation or powerset recipe", time: "O(2^n)" },
+            { key: "subset_backtracking", name: "Backtracking", desc: "Input: Array of elements | Output: All subsets | Backtracking approach (combinatorial recursion)", time: "O(2^n)" },
+            { key: "subset_recursive", name: "Recursive", desc: "Input: Array of elements | Output: All subsets | Classic recursive backtracking", time: "O(2^n)" },
+            { key: "subset_iterative", name: "Iterative", desc: "Input: Array of elements | Output: All subsets | Iterative expansion of subsets", time: "O(2^n)" },
+            { key: "subset_builtin", name: "Python Built-in", desc: "Input: Array of elements | Output: All subsets | Uses itertools combinations/powerset recipe", time: "O(2^n)" },
+        ],
+        "0/1 knapsack": [
+            { name: "Dynamic Programming", desc: "Input: Values + Weights + Capacity | Output: Max value | Classic DP approach with memo/table", time: "O(nC)" },
+            { name: "Backtracking", desc: "Input: Values + Weights + Capacity | Output: Max value | Explore combinations with pruning", time: "Exponential (pruned)" },
+            { name: "Branch & Bound", desc: "Input: Values + Weights + Capacity | Output: Max value | Use optimistic bounds to prune search", time: "Depends on pruning" },
+        ],
+    };
+
+    // Initialize Socket.IO first since global.js depends on it
+    // Socket already initialized above and assigned to window.socket
+</script>
+
+<!-- Templates for dynamic input sections -->
+<template id="tmpl-sorting-input">
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Array Size</label>
+        <input type="range" min="5" max="100" value="20" id="p__PLAYER__-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <div class="text-center mt-1">
+            <span class="text-sm sm:text-lg lg:text-xl font-bold text-__COLOR__-400" id="p__PLAYER__-array-size-display">20</span>
+            <span class="text-xs sm:text-sm">elements</span>
+        </div>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Custom Array</label>
+        <input type="text" id="p__PLAYER__-custom-array" placeholder="e.g., 5, 2, 8, 1, 9" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-__COLOR__-500">
+    </div>
+    <button data-action="generate-random-array" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Array
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Array:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-array">[Click Generate]</p>
+    </div>
+</template>
+<!-- Aliases for slugified category lookup -->
+<!-- shortest path alias -> uses same graph input template -->
+<template id="tmpl-shortest-path-input">
+    <!-- Reuse graph template content -->
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Graph Size (Nodes)</label>
+        <input type="range" min="4" max="10" value="6" id="p__PLAYER__-graph-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <div class="text-center mt-1">
+            <span class="text-sm sm:text-lg lg:text-xl font-bold text-__COLOR__-400" id="p__PLAYER__-graph-size-display">6</span>
+            <span class="text-xs sm:text-sm">nodes</span>
+        </div>
+    </div>
+    <button data-action="generate-random-graph" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Graph
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Graph:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-graph">[Click Generate]</p>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Nodes (comma separated)</label>
+        <input id="p__PLAYER__-graph-nodes" placeholder="e.g., A, B, C, D" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base" />
+        <p class="text-xs text-gray-400 mt-1">Enter node labels separated by commas. These will populate the Start Node dropdown.</p>
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 mt-2">Edges (one per line)</label>
+        <textarea id="p__PLAYER__-graph-input" placeholder='Simple edges:  A-B(5), B-C(-3), C-A(2)' class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base h-28 resize-vertical"></textarea>
+        <div class="flex gap-2 mt-2 items-center">
+            <label class="block text-xs sm:text-sm font-semibold">Start Node</label>
+            <select id="p__PLAYER__-start-node" class="ml-2 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm">
+                <option value="">(Select start node)</option>
+            </select>
+            <select id="p__PLAYER__-graph-format" class="ml-2 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm">
+                <option value="auto">Auto-detect</option>
+                <option value="adjacency">Adjacency JSON</option>
+                <option value="edges">Edge list / CSV</option>
+            </select>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Notes: Nodes are labels (A,B,C...). Edges can be simple (A-B) or with weight using parentheses or CSV (A,B,3). For MST, weights are required for meaningful trees.</p>
+    </div>
+</template>
+
+<!-- mst alias -->
+<template id="tmpl-mst-input">
+    <!-- Reuse graph template content (MST doesn't require start node, but dropdown harmless) -->
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Graph Size (Nodes)</label>
+        <input type="range" min="4" max="10" value="6" id="p__PLAYER__-graph-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <div class="text-center mt-1">
+            <span class="text-sm sm:text-lg lg:text-xl font-bold text-__COLOR__-400" id="p__PLAYER__-graph-size-display">6</span>
+            <span class="text-xs sm:text-sm">nodes</span>
+        </div>
+    </div>
+    <button data-action="generate-random-graph" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Graph
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Graph:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-graph">[Click Generate]</p>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Nodes (comma separated)</label>
+        <input id="p__PLAYER__-graph-nodes" placeholder="e.g., A, B, C, D" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base" />
+        <p class="text-xs text-gray-400 mt-1">Enter node labels separated by commas. These will populate the Start Node dropdown.</p>
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 mt-2">Edges (one per line)</label>
+        <textarea id="p__PLAYER__-graph-input" placeholder='Simple edges:  A-B(5), B-C(-3), C-A(2)' class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base h-28 resize-vertical"></textarea>
+        <div class="flex gap-2 mt-2 items-center">
+            <label class="block text-xs sm:text-sm font-semibold">Start Node</label>
+            <select id="p__PLAYER__-start-node" class="ml-2 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm">
+                <option value="">(Select start node)</option>
+            </select>
+            <select id="p__PLAYER__-graph-format" class="ml-2 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm">
+                <option value="auto">Auto-detect</option>
+                <option value="adjacency">Adjacency JSON</option>
+                <option value="edges">Edge list / CSV</option>
+            </select>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Notes: Nodes are labels (A,B,C...). Edges can be simple (A-B) or with weight using parentheses or CSV (A,B,3). For MST, weights are required for meaningful trees.</p>
+    </div>
+</template>
+
+<!-- 0/1 knapsack alias (slugified id expected is tmpl-0-1-knapsack-input) -->
+<template id="tmpl-0-1-knapsack-input">
+    <!-- Reuse knapsack template content -->
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Number of Items</label>
+        <input type="number" min="1" max="100" value="5" id="p__PLAYER__-knapsack-size" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+        <p class="text-xs text-gray-400 mt-1">Enter how many items you will provide (affects recommended input format).</p>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Values (comma separated)</label>
+        <input id="p__PLAYER__-knapsack-values" placeholder="e.g., 74,84,12,96" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Weights (comma separated)</label>
+        <input id="p__PLAYER__-knapsack-weights" placeholder="e.g., 17,16,12,20" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Knapsack Capacity</label>
+        <input id="p__PLAYER__-knapsack-capacity" type="number" min="0" placeholder="e.g., 50" class="w-36 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+    </div>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs text-gray-400">Notes: Enter values and weights as comma-separated lists of the same length. Capacity must be a non-negative integer. Example: Values: 74,84,12 | Weights: 17,16,12 | Capacity: 50</p>
+    </div>
+</template>
+
+<!-- subset generation alias (slug: subset-generation) -->
+<template id="tmpl-subset-generation-input">
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Input Size</label>
+        <input type="range" min="5" max="50" value="20" id="p__PLAYER__-input-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <div class="text-center mt-1">
+            <span class="text-sm sm:text-lg lg:text-xl font-bold text-__COLOR__-400" id="p__PLAYER__-input-size-display">20</span>
+            <span class="text-xs sm:text-sm">items</span>
+        </div>
+    </div>
+    <button data-action="generate-random-input" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Input
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Input:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-input">[Click Generate]</p>
+    </div>
+    <!-- Allow custom subset input (comma separated) -->
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Or provide custom input (comma-separated)</label>
+        <input id="p__PLAYER__-subset-input" placeholder="e.g., 1,2,3,4" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+        <p class="text-xs text-gray-400 mt-1">Notes: Provide a comma-separated list of elements. For example: 1,2,3,4 or a,b,c. Elements will be parsed as numbers when possible.</p>
+    </div>
+</template>
+
+<!-- Searching template -->
+<template id="tmpl-searching-input">
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Array Size</label>
+        <input type="range" min="5" max="100" value="20" id="p__PLAYER__-array-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <div class="text-center mt-1">
+            <span class="text-sm sm:text-lg lg:text-xl font-bold text-__COLOR__-400" id="p__PLAYER__-array-size-display">20</span>
+            <span class="text-xs sm:text-sm">elements</span>
+        </div>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Search Target</label>
+        <input type="number" id="p__PLAYER__-search-target" placeholder="e.g., 42" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-__COLOR__-500">
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Custom Array</label>
+        <input type="text" id="p__PLAYER__-custom-array" placeholder="e.g., 1, 3, 5, 7, 9 (sorted)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-__COLOR__-500">
+    </div>
+    <button data-action="generate-random-array" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Array & Target
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Data:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-array">[Click Generate]</p>
+        <p class="text-xs font-mono text-yellow-400" id="p__PLAYER__-current-target">Target: [Not Set]</p>
+    </div>
+</template>
+
+<!-- String matching template -->
+<template id="tmpl-string-matching-input">
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Text String</label>
+        <textarea id="p__PLAYER__-text-input" placeholder="Enter the text to search in..." class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-__COLOR__-500 h-20 resize-none"></textarea>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Pattern to Search</label>
+        <input type="text" id="p__PLAYER__-pattern-input" placeholder="e.g., hello" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base focus:outline-none focus:border-__COLOR__-500">
+    </div>
+    <button data-action="generate-random-string" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Text & Pattern
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Data:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-text">[Click Generate]</p>
+        <p class="text-xs font-mono text-yellow-400" id="p__PLAYER__-current-pattern">Pattern: [Not Set]</p>
+    </div>
+</template>
+
+<!-- Graph / Shortest path / MST template (graph size + generate) -->
+<template id="tmpl-graph-input">
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Graph Size (Nodes)</label>
+        <input type="range" min="4" max="10" value="6" id="p__PLAYER__-graph-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <div class="text-center mt-1">
+            <span class="text-sm sm:text-lg lg:text-xl font-bold text-__COLOR__-400" id="p__PLAYER__-graph-size-display">6</span>
+            <span class="text-xs sm:text-sm">nodes</span>
+        </div>
+    </div>
+    <button data-action="generate-random-graph" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Graph
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Graph:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-graph">[Click Generate]</p>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Nodes (comma separated)</label>
+        <input id="p__PLAYER__-graph-nodes" placeholder="e.g., A, B, C, D" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base" />
+        <p class="text-xs text-gray-400 mt-1">Enter node labels separated by commas. These will populate the Start Node dropdown.</p>
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 mt-2">Edges (one per line)</label>
+        <textarea id="p__PLAYER__-graph-input" placeholder='Simple edges:  A-B(5), B-C(-3), C-A(2)' class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 sm:px-3 lg:px-4 py-1 sm:py-2 lg:py-3 text-xs sm:text-sm lg:text-base h-28 resize-vertical"></textarea>
+        <div class="flex gap-2 mt-2 items-center">
+            <label class="block text-xs sm:text-sm font-semibold">Start Node</label>
+            <select id="p__PLAYER__-start-node" class="ml-2 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm">
+                <option value="">(Select start node)</option>
+            </select>
+            <select id="p__PLAYER__-graph-format" class="ml-2 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm">
+                <option value="auto">Auto-detect</option>
+                <option value="adjacency">Adjacency JSON</option>
+                <option value="edges">Edge list / CSV</option>
+            </select>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Notes: Nodes are labels (A,B,C...). Edges can be simple (A-B) or with weight using parentheses or CSV (A,B,3). For MST, weights are required for meaningful trees.</p>
+    </div>
+</template>
+
+<!-- Knapsack template -->
+<template id="tmpl-knapsack-input">
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Number of Items</label>
+        <input type="number" min="1" max="100" value="5" id="p__PLAYER__-knapsack-size" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+        <p class="text-xs text-gray-400 mt-1">Enter how many items you will provide (affects recommended input format).</p>
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Values (comma separated)</label>
+        <input id="p__PLAYER__-knapsack-values" placeholder="e.g., 74,84,12,96" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Weights (comma separated)</label>
+        <input id="p__PLAYER__-knapsack-weights" placeholder="e.g., 17,16,12,20" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+    </div>
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Knapsack Capacity</label>
+        <input id="p__PLAYER__-knapsack-capacity" type="number" min="0" placeholder="e.g., 50" class="w-36 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+    </div>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs text-gray-400">Notes: Enter values and weights as comma-separated lists of the same length. Capacity must be a non-negative integer. Example: Values: 74,84,12 | Weights: 17,16,12 | Capacity: 50</p>
+    </div>
+</template>
+
+<!-- Generic default template (fallback) -->
+<template id="tmpl-default-input">
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Input Size</label>
+        <input type="range" min="5" max="50" value="20" id="p__PLAYER__-input-size" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <div class="text-center mt-1">
+            <span class="text-sm sm:text-lg lg:text-xl font-bold text-__COLOR__-400" id="p__PLAYER__-input-size-display">20</span>
+            <span class="text-xs sm:text-sm">items</span>
+        </div>
+    </div>
+    <button data-action="generate-random-input" id="p__PLAYER__-generate-btn" class="w-full bg-__COLOR__-600 hover:bg-__COLOR__-700 text-white font-semibold py-1 sm:py-2 lg:py-3 rounded-lg transition-all mb-3 sm:mb-4 text-xs sm:text-sm lg:text-base">
+        Generate Random Input
+    </button>
+    <div class="bg-slate-800 rounded-lg p-2 sm:p-3 lg:p-4 mb-3 sm:mb-4">
+        <p class="text-xs font-semibold mb-1 sm:mb-2">Current Input:</p>
+        <p class="text-xs font-mono text-cyan-400 break-all" id="p__PLAYER__-current-input">[Click Generate]</p>
+    </div>
+    <!-- Allow custom subset input (comma separated) -->
+    <div class="mb-3 sm:mb-4">
+        <label class="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Or provide custom input (comma-separated)</label>
+        <input id="p__PLAYER__-subset-input" placeholder="e.g., 1,2,3,4" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs sm:text-sm" />
+        <p class="text-xs text-gray-400 mt-1">Notes: Provide a comma-separated list of elements. For example: 1,2,3,4 or a,b,c. Elements will be parsed as numbers when possible.</p>
+    </div>
+</template>
+<!-- Initialize Socket.IO handlers -->
+<script>
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+    
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+    });
+</script>
+
+<!-- Load application scripts -->
+<script src="/static/js/global.js"></script>
+<script src="/static/js/main.js"></script>
+
 </body>
 </html>
