@@ -9,9 +9,11 @@ def knapsack_dp(values, weights, capacity):
     """
     n = len(values)
     dp = [[0 for _ in range(capacity + 1)] for _ in range(n + 1)]
+    comparisons = 0
     
     for i in range(1, n + 1):
         for w in range(capacity + 1):
+            comparisons += 1
             if weights[i-1] <= w:
                 dp[i][w] = max(values[i-1] + dp[i-1][w-weights[i-1]], dp[i-1][w])
             else:
@@ -21,12 +23,13 @@ def knapsack_dp(values, weights, capacity):
     selected = []
     i, j = n, capacity
     while i > 0 and j > 0:
+        comparisons += 1
         if dp[i][j] != dp[i-1][j]:
             selected.append(i-1)
             j -= weights[i-1]
         i -= 1
         
-    return dp[n][capacity], selected
+    return (dp[n][capacity], selected), comparisons
 
 def knapsack_backtracking(values, weights, capacity):
     """0/1 Knapsack using Backtracking with memoization
@@ -36,8 +39,11 @@ def knapsack_backtracking(values, weights, capacity):
     n = len(values)
     max_value = [0]  # Use list to modify in recursion
     best_selection = [[]]
+    comparisons = 0
     
     def backtrack(index, curr_value, curr_weight, selected):
+        nonlocal comparisons
+        comparisons += 1
         if curr_weight > capacity:
             return
             
@@ -58,7 +64,7 @@ def knapsack_backtracking(values, weights, capacity):
         backtrack(index + 1, curr_value, curr_weight, selected)
     
     backtrack(0, 0, 0, [])
-    return max_value[0], best_selection[0]
+    return (max_value[0], best_selection[0]), comparisons
 
 def knapsack_branch_bound(values, weights, capacity):
     """0/1 Knapsack using Branch and Bound approach
@@ -69,6 +75,7 @@ def knapsack_branch_bound(values, weights, capacity):
     n = len(values)
     max_value = [0]
     best_selection = [[]]
+    comparisons = 0
     
     # Sort items by value/weight ratio for better bounds
     items = list(zip(values, weights, range(n)))
@@ -93,6 +100,8 @@ def knapsack_branch_bound(values, weights, capacity):
         return bound_value
     
     def branch_and_bound(index, curr_value, curr_weight, selected):
+        nonlocal comparisons
+        comparisons += 1
         if curr_weight > capacity:
             return
             
@@ -110,9 +119,9 @@ def knapsack_branch_bound(values, weights, capacity):
                            curr_value + items[index][0],
                            curr_weight + items[index][1],
                            selected + [index])
-                           
+                            
             # Exclude current item
             branch_and_bound(index + 1, curr_value, curr_weight, selected)
     
     branch_and_bound(0, 0, 0, [])
-    return max_value[0], sorted(best_selection[0])
+    return (max_value[0], sorted(best_selection[0])), comparisons

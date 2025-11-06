@@ -484,6 +484,36 @@ function initializeInputEventListeners(player) {
     });
   }
 
+  // Text / Pattern inputs for String Matching - update global state on manual input
+  const textInput = document.getElementById(`p${player}-text-input`);
+  const patternInput = document.getElementById(`p${player}-pattern-input`);
+  const currentText = document.getElementById(`p${player}-current-text`);
+  const currentPattern = document.getElementById(`p${player}-current-pattern`);
+  if (textInput || patternInput) {
+    const updateTextState = () => {
+      try {
+        const t = textInput ? textInput.value : '';
+        const p = patternInput ? patternInput.value : '';
+        if (player === 1) {
+          globalGameState.player1.text = t;
+          globalGameState.player1.pattern = p;
+        } else {
+          globalGameState.player2.text = t;
+          globalGameState.player2.pattern = p;
+        }
+
+        if (currentText && t) currentText.textContent = t.length > 50 ? t.substring(0,50) + '...' : t;
+        if (currentPattern && p) currentPattern.textContent = `Pattern: "${p}"`;
+      } catch (e) {
+        console.debug('updateTextState error', e);
+      }
+      checkPlayerSelection(player);
+    };
+
+    if (textInput) textInput.addEventListener('input', updateTextState);
+    if (patternInput) patternInput.addEventListener('input', updateTextState);
+  }
+
   // Graph custom input listener (JSON adjacency or edge list)
   const graphInput = document.getElementById(`p${player}-graph-input`);
   const graphStart = document.getElementById(`p${player}-start-node`);

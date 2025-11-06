@@ -7,11 +7,13 @@ def subset_backtracking(nums):
     Much faster and more reliable than manual backtracking.
     """
     result = []
+    comparisons = 0
     # Generate subsets of all possible lengths (0 to len(nums))
     for r in range(len(nums) + 1):
         for combo in itertools.combinations(nums, r):
             result.append(list(combo))
-    return result
+            comparisons += 1
+    return result, comparisons
 
 
 def subset_bitmasking(nums):
@@ -26,8 +28,12 @@ def subset_bitmasking(nums):
         s = list(iterable)
         return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
     
-    result = [list(subset) for subset in powerset(nums)]
-    return result
+    result = []
+    comparisons = 0
+    for subset in powerset(nums):
+        result.append(list(subset))
+        comparisons += 1
+    return result, comparisons
 
 
 def subset_recursive(nums):
@@ -35,8 +41,11 @@ def subset_recursive(nums):
     Generate subsets using classic recursive backtracking.
     """
     result = []
+    comparisons = 0
 
     def backtrack(i, path):
+        nonlocal comparisons
+        comparisons += 1
         if i == len(nums):
             result.append(path[:])
             return
@@ -48,7 +57,7 @@ def subset_recursive(nums):
         path.pop()
 
     backtrack(0, [])
-    return result
+    return result, comparisons
 
 
 def subset_iterative(nums):
@@ -56,10 +65,12 @@ def subset_iterative(nums):
     Iterative method: start with empty subset and for each number extend existing subsets.
     """
     result = [[]]
+    comparisons = 0
     for num in nums:
-        # append current number to all existing subsets
-        result += [curr + [num] for curr in list(result)]
-    return result
+        new_subsets = [curr + [num] for curr in list(result)]
+        comparisons += len(new_subsets)
+        result += new_subsets
+    return result, comparisons
 
 
 def subset_builtin(nums):
@@ -73,4 +84,9 @@ def subset_builtin(nums):
         s = list(iterable)
         return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-    return [list(subset) for subset in powerset(nums)]
+    result = []
+    comparisons = 0
+    for subset in powerset(nums):
+        result.append(list(subset))
+        comparisons += 1
+    return result, comparisons

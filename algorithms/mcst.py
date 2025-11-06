@@ -38,12 +38,14 @@ def kruskal(graph, start=None):
     edges.sort(key=lambda x: x[2])  # Python's optimized Timsort algorithm
 
     mst = []
+    comparisons = 0
     for u, v, weight in edges:
+        comparisons += 1
         if find(u) != find(v):
             union(u, v)
             mst.append((u, v, weight))
 
-    return mst
+    return mst, comparisons
 
 def prim(graph, start):
     """
@@ -54,12 +56,15 @@ def prim(graph, start):
     edges = [(weight, start, neighbor) for neighbor, weight in graph[start].items()]
     heapq.heapify(edges)  # Python's optimized heap construction
     mst = []
+    comparisons = 0
     while edges:
         weight, frm, to = heapq.heappop(edges)
+        comparisons += 1
         if to not in visited:
             visited.add(to)
             mst.append((frm, to, weight))
             for neighbor, w in graph[to].items():
+                comparisons += 1
                 if neighbor not in visited:
                     heapq.heappush(edges, (w, to, neighbor))
-    return mst
+    return mst, comparisons

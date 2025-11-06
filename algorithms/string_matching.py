@@ -1,16 +1,26 @@
 # algorithms/string_matching.py
 
 def naive_search(text, pattern):
-    """Naive pattern matching using Python's built-in string methods."""
+    """Naive pattern matching with character-comparison counting.
+
+    Returns (matches_list, comparisons)
+    """
     matches = []
-    start = 0
-    while True:
-        pos = text.find(pattern, start)
-        if pos == -1:
-            break
-        matches.append(pos)
-        start = pos + 1
-    return matches
+    n, m = len(text), len(pattern)
+    comparisons = 0
+    if m == 0:
+        return list(range(n + 1)), comparisons
+
+    for i in range(n - m + 1):
+        match = True
+        for j in range(m):
+            comparisons += 1
+            if text[i + j] != pattern[j]:
+                match = False
+                break
+        if match:
+            matches.append(i)
+    return matches, comparisons
 
 
 def kmp_search(text, pattern):
@@ -40,7 +50,9 @@ def kmp_search(text, pattern):
     lps = compute_lps(pattern)
 
     i = j = 0  # index for text, pattern
+    comparisons = 0
     while i < n:
+        comparisons += 1
         if pattern[j] == text[i]:
             i += 1
             j += 1
@@ -52,7 +64,7 @@ def kmp_search(text, pattern):
                 j = lps[j - 1]
             else:
                 i += 1
-    return matches
+    return matches, comparisons
 
 
 def rabin_karp(text, pattern, prime=101):
@@ -64,8 +76,9 @@ def rabin_karp(text, pattern, prime=101):
     n, m = len(text), len(pattern)
     d = 256  # alphabet size
 
+    comparisons = 0
     if m > n:
-        return matches
+        return matches, comparisons
 
     # hash values
     p_hash = 0
@@ -81,13 +94,20 @@ def rabin_karp(text, pattern, prime=101):
 
     for i in range(n - m + 1):
         if p_hash == t_hash:
-            if text[i:i+m] == pattern:
+            # count character comparisons when verifying
+            match = True
+            for j in range(m):
+                comparisons += 1
+                if text[i + j] != pattern[j]:
+                    match = False
+                    break
+            if match:
                 matches.append(i)
         if i < n - m:
             t_hash = (d * (t_hash - ord(text[i]) * h) + ord(text[i+m])) % prime
             if t_hash < 0:
                 t_hash += prime
-    return matches
+    return matches, comparisons
 
 
 def boyer_moore(text, pattern):
@@ -104,19 +124,24 @@ def boyer_moore(text, pattern):
 
     matches = []
     n, m = len(text), len(pattern)
+    comparisons = 0
     if m == 0 or n < m:
-        return matches
+        return matches, comparisons
 
     bad_char = bad_char_table(pattern)
     i = 0
     while i <= n - m:
         j = m - 1
-        while j >= 0 and pattern[j] == text[i+j]:
-            j -= 1
+        while j >= 0:
+            comparisons += 1
+            if pattern[j] == text[i + j]:
+                j -= 1
+            else:
+                break
         if j < 0:
             matches.append(i)
             i += m
         else:
             shift = bad_char.get(text[i + m - 1], m)
             i += shift
-    return matches
+    return matches, comparisons
